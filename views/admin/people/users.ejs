@@ -1,0 +1,66 @@
+<div class="row">
+    <div class="col-lg-12">
+        <div class="d-flex flex-wrap align-items-center justify-content-between mb-4">
+            <div>
+                <h4 class="mb-3">User List</h4>
+                
+            </div>
+           
+        </div>
+    </div>
+    <div class="col-lg-12">
+        <div class="table-responsive rounded mb-3">
+          <table id="userTable" class="table table-striped">
+            <thead class="bg-white text-uppercase">
+                <tr class="ligth ligth-data">
+                    <th>
+                        <div class="checkbox d-inline-block">
+                            <input type="checkbox" class="checkbox-input" id="checkbox1">
+                            <label for="checkbox1" class="mb-0"></label>
+                        </div>
+                    </th>
+                    <th>Fullname</th>
+                    <th>Email</th>
+                    <th>Role Name</th>
+
+                </tr>
+            </thead>
+            <tbody class="ligth-body" >
+             
+                <% if(data.users.length !== 0 ){ %>
+                    
+                      <% for (let i = 0; i < data.users.length; i++) { %>
+                        <tr>
+                          <td>
+                            <div class="checkbox d-inline-block">
+                              <input type="checkbox" class="checkbox-input" id="checkbox<%= i + 3 %>"> <label for="checkbox<%= i + 3 %>" class="mb-0"></label>
+                            </div>
+                          </td>
+                          <td><%= data.users[i].fullname %></td>
+                          <td><%= data.users[i].email %></td> 
+                     
+                            <% if (data.users[i].Role) { %>
+                                <td><%= data.users[i].Role.role_name.toUpperCase() %></td>
+                              <% } else { %>
+                                <td>No Role Assigned</td>
+                              <% } %>
+                         
+                        </tr>
+                      <% } %>
+                  
+                  <% } else { %>
+                    <p>No users found.</p>
+                  <% } %>
+                </table>
+                
+            </tbody>
+        </table>
+        </div>
+    </div>
+</div>
+<script>
+  const table = new DataTable('#userTable', {
+        responsive: true,
+        order: [[0, 'desc']]
+    });
+</script>

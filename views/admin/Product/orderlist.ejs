@@ -1,0 +1,192 @@
+
+<div class="container mt-4">
+    <div class="row mb-3">
+        <div class="col">
+            <h2>Sales Management</h2>
+        </div>
+    </div>
+
+    <div class="card">
+        <div class="card-body">
+            <table id="salesTable" class="table table-striped">
+                <thead>
+                    <tr>
+                        <th>Order ID</th>
+                        <th>Order Date</th>
+                        <th>Total Amount</th>
+                        <th>Cash</th>
+                        <th>Change</th>
+                        <th>Created By</th>
+                        <th>Actions</th>
+                    </tr>
+                </thead>
+                <tbody>
+                    <% orders.forEach(sale => { %>
+                    <tr>
+                        <td><%= sale.receipt_no %></td>
+                        <td><%= formatDate(sale.receipt_date) %></td>
+                        <td><%= formatCurrency(sale.total_price) %></td>
+                        <td><%= formatCurrency(sale.cash) %></td>
+                        <td><%= formatCurrency(sale.change) %></td>
+                        <td><%= sale.cashier ? sale.cashier.fullname : 'Unknown' %></td>
+                        <td>
+                            <button 
+                                class="btn btn-sm btn-info" 
+                                onclick="viewSaleDetails('<%= sale.id %>')"
+                            >
+                                <i class="fas fa-eye"></i>
+                            </button>
+                        </td>
+                    </tr>
+                    <% }); %>
+                </tbody>
+            </table>
+        </div>
+    </div>
+</div>
+<div class="modal fade" id="viewSaleModal" tabindex="-1">
+    <div class="modal-dialog modal-lg">
+        <div class="modal-content">
+            <div class="modal-header">
+                <h5 class="modal-title">Sale Details</h5>
+                <button type="button" class="btn-close" data-bs-dismiss="modal"></button>
+            </div>
+            <div class="modal-body">
+                <div class="row mb-3">
+                    <div class="col-md-6">
+                        <h6>Sale Information</h6>
+                        <p><strong>Receipt No:</strong> <span id="viewReceiptNo"></span></p>
+                        <p><strong>Date:</strong> <span id="viewReceiptDate"></span></p>
+                        <p><strong>Total Price:</strong> <span id="viewTotalPrice"></span></p>
+                    </div>
+                    <div class="col-md-6">
+                        <h6>Payment Details</h6>
+                        <p><strong>Cash:</strong> <span id="viewCash"></span></p>
+                        <p><strong>Change:</strong> <span id="viewChange"></span></p>
+                        <p><strong>Cashier:</strong> <span id="viewCashier"></span></p>
+                    </div>
+                </div>
+                
+                <h6>Sale Items</h6>
+                <table class="table table-bordered">
+                    <thead>
+                        <tr>
+                            <th>Product</th>
+                            <th>Price</th>
+                            <th>Quantity</th>
+                            <th>Subtotal</th>
+                        </tr>
+                    </thead>
+                    <tbody id="saleItemsBody">
+                    </tbody>
+                    <tfoot>
+                        <tr>
+                            <td colspan="3" class="text-end"><strong>Total:</strong></td>
+                            <td id="viewSaleTotalAmount"></td>
+                        </tr>
+                    </tfoot>
+                </table>
+            </div>
+            <div class="modal-footer">
+                <button type="button" class="btn btn-secondary" data-bs-dismiss="modal">Close</button>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+document.addEventListener('DOMContentLoaded', function() {
+    // Initialize DataTable with full features
+    const table = new DataTable('#salesTable', {
+        responsive: true,
+        pageLength: 10,
+        lengthMenu: [[10, 25, 50, -1], [10, 25, 50, "All"]],
+        order: [[1, 'desc']],
+        dom: 'Bfrtip', // B: Buttons, f: filtering, r: processing, t: table, i: information, p: pagination
+        buttons: [
+            'copy', 'csv', 'excel', 'pdf', 'print'
+        ],
+        language: {
+            paginate: {
+                previous: '<i class="fas fa-chevron-left"></i>',
+                next: '<i class="fas fa-chevron-right"></i>'
+            }
+        }
+    });
+});
+
+function viewSaleDetails(saleId) {
+    // Placeholder for viewing sale details
+    const viewModal = new bootstrap.Modal(document.getElementById('viewSaleModal'));
+    viewModal.show();
+
+    // TODO: Implement actual sale details fetching
+    // axios.get(`/api/sales/${saleId}`)
+    //     .then(function(response) {
+    //         // Populate modal with sale details
+    //     })
+    //     .catch(function(error) {
+    //         // Handle error
+    //     });
+}
+
+function formatCurrency(amount) {
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR'
+    }).format(amount);
+}
+
+function formatDate(dateString) {
+    return new Date(dateString).toLocaleDateString('id-ID', {
+        year: 'numeric',
+        month: 'long',
+        day: 'numeric',
+        hour: '2-digit',
+        minute: '2-digit'
+    });
+}
+function viewSaleDetails(saleId) {
+    axios.get(`/api/sales/${saleId}`)
+        .then(function(response) {
+            const sale = response.data.sale;
+            
+            // Populate sale information
+            document.getElementById('viewReceiptNo').textContent = sale.receipt_no;
+            document.getElementById('viewReceiptDate').textContent = formatDate(sale.receipt_date);
+            document.getElementById('viewTotalPrice').textContent = formatCurrency(sale.total_price);
+            document.getElementById('viewCash').textContent = formatCurrency(sale.cash);
+            document.getElementById('viewChange').textContent = formatCurrency(sale.change);
+            document.getElementById('viewCashier').textContent = sale.cashier ? sale.cashier.fullname : 'Unknown';
+
+            // Populate sale items
+            const itemsBody = document.getElementById('saleItemsBody');
+            itemsBody.innerHTML = ''; // Clear previous items
+
+            sale.items.forEach(item => {
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td>${item.product_name}</td>
+                    <td>${formatCurrency(item.price)}</td>
+                    <td>${item.quantity}</td>
+                    <td>${formatCurrency(item.price * item.quantity)}</td>
+                `;
+                itemsBody.appendChild(row);
+            });
+
+            // Update total amount in footer
+            document.getElementById('viewSaleTotalAmount').textContent = formatCurrency(sale.total_price);
+
+            // Show the modal
+            const viewModal = new bootstrap.Modal(document.getElementById('viewSaleModal'));
+            viewModal.show();
+        })
+        .catch(function(error) {
+            Swal.fire({
+                icon: 'error',
+                title: 'Error',
+                text: error.response?.data?.message || 'Error loading sale details'
+            });
+        });
+}
+</script>

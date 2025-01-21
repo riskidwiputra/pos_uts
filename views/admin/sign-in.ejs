@@ -1,0 +1,208 @@
+
+
+
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="utf-8">
+      <meta name="viewport" content="width=device-width, initial-scale=1, shrink-to-fit=no">
+      <title>Log In </title>
+      
+      <!-- Favicon -->
+      <link rel="shortcut icon" href="assets/img/LogoPos.jpeg" type="image/x-icon">
+      <link rel="stylesheet" href="assets_admin/css/backend-plugin.min.css">
+      <link rel="stylesheet" href="assets_admin/css/backend.css?v=1.0.0">
+      <link rel="stylesheet" href="assets_admin/vendor/@fortawesome/fontawesome-free/css/all.min.css">
+      <link rel="stylesheet" href="assets_admin/vendor/line-awesome/dist/line-awesome/css/line-awesome.min.css">
+      <link rel="stylesheet" href="assets_admin/vendor/remixicon/fonts/remixicon.css">  </head>
+  <body class=" ">
+ 
+    
+      <div class="wrapper">
+      <section class="login-content">
+         <div class="container">
+            <div class="row align-items-center justify-content-center height-self-center">
+               <div class="col-lg-8">
+                  <div class="card auth-card">
+                     <div class="card-body p-0">
+                        <div class="d-flex align-items-center auth-content">
+                           <div class="col-lg-7 align-self-center">
+                              <div class="p-3">
+                              
+                                 <h2 class="mb-2">Sign In</h2>
+                                 <p>Login to stay POS UAS.</p>
+                                    <form id="loginForm" onSubmit="handleLogin(event)">
+                                       <div class="row">
+                                         <div class="col-lg-12">
+                                           <div class="floating-label form-group">
+                                             <input class="floating-input form-control" required name="email" type="email" placeholder=" ">
+                                             <label>Email</label>
+                                           </div>
+                                         </div>
+                                         <div class="col-lg-12">
+                                           <div class="floating-label form-group">
+                                             <input class="floating-input form-control" required name="password" type="password" placeholder=" ">
+                                             <label>Password</label>
+                                           </div>
+                                         </div>
+                                       </div>
+                                       <div id="alert-container"></div>
+                                    <button class="btn btn-secondary"><a href="/" class="text-white" >Back</a></button>
+                                    <button type="submit" class="btn btn-primary">Sign In</button>
+                                  
+                                    <p class="mt-3">
+                                       Create an Account <a href="/register" class="text-primary">Sign Up</a>
+                                    </p>
+                                 </form>
+                              </div>
+                           </div>
+                           <div class="col-lg-5 content-right">
+                              <img src="assets_admin/images/login/01.png" class="img-fluid image-right" alt="">
+                           </div>
+                        </div>
+                     </div>
+                  </div>
+               </div>
+            </div>
+         </div>
+      </section>
+      </div>
+    
+    <!-- Backend Bundle JavaScript -->
+    <!-- <script>
+      // Sembunyikan alert setelah 5 detik
+      window.addEventListener('load', () => {
+        const alert = document.querySelector('.alert');
+        if (alert) {
+          setTimeout(() => {
+            alert.classList.add('d-none'); // Sembunyikan dengan kelas d-none (Bootstrap)
+          }, 5000);
+        }
+      });
+    </script> -->
+    <script src="assets_admin/js/backend-bundle.min.js"></script>
+    
+    <!-- Table Treeview JavaScript -->
+    <script src="assets_admin/js/table-treeview.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script src="assets_admin/js/customizer.js"></script>
+    
+    <!-- Chart Custom JavaScript -->
+    <script async src="assets_admin/js/chart-custom.js"></script>
+    
+    <!-- app JavaScript -->
+    <script src="assets_admin/js/app.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/axios/dist/axios.min.js"></script>
+    <script>
+      async function handleLogin(e) {
+        e.preventDefault();
+        const form = e.target;
+        const alertContainer = document.getElementById('alert-container');
+        
+        try {
+          const formData = new FormData(form);
+          const data = {
+            email: formData.get('email'),
+            password: formData.get('password')
+          };
+      
+          const response = await axios.post('/api/login', data);
+          
+          if (response.data.status === 'Login Success') {
+ 
+            alertContainer.innerHTML = `
+              <div class="alert alert-success ">
+               ${response.data.status}
+                <button type="button" class="close" data-dismiss="alert">&times;</button>
+              </div>
+            `;
+      
+            
+            localStorage.setItem('accessToken', response.data.data.accessToken);
+            
+   
+            setTimeout(() => {
+              window.location.href = '/admin'; // atau halaman tujuan lainnya
+            }, 1500);
+          }
+      
+        } catch (error) {
+          let errorMessage = 'An error occurred';
+          
+          if (error.response) {
+
+            errorMessage = error.response.data.message || error.response.data;
+          } else if (error.request) {
+
+            errorMessage = 'No response from server';
+          } else {
+
+            errorMessage = error.message;
+          }
+      
+          alertContainer.innerHTML = `
+            <div class="alert alert-danger ">
+              ${errorMessage}
+              <button type="button" class="close" data-dismiss="alert">&times;</button>
+            </div>
+          `;
+        }
+      }
+      
+      // Sembunyikan alert setelah beberapa detik
+      function hideAlert() {
+        const alerts = document.querySelectorAll('.alert');
+        alerts.forEach(alert => {
+          setTimeout(() => {
+            alert.classList.add('fade');
+            setTimeout(() => alert.remove(), 3000);
+          }, 5000);
+        });
+      }
+      axios.interceptors.request.use(
+         (config) => {
+            const token = localStorage.getItem('accessToken');
+            if (token) {
+               config.headers.Authorization = `Bearer ${token}`;
+            }
+            return config;
+         },
+         (error) => {
+            return Promise.reject(error);
+         }
+         );
+
+         axios.interceptors.response.use(
+         (response) => response,
+         async (error) => {
+            const originalRequest = error.config;
+
+            // Jika error karena token expired
+            if (error.response.status === 401 && !originalRequest._retry) {
+               originalRequest._retry = true;
+
+               try {
+               // Coba refresh token
+               const response = await axios.post('/refresh-token');
+               const { accessToken } = response.data;
+               
+               // Update token di localStorage
+               localStorage.setItem('accessToken', accessToken);
+               
+               // Ulangi request yang gagal
+               originalRequest.headers.Authorization = `Bearer ${accessToken}`;
+               return axios(originalRequest);
+               } catch (error) {
+               // Jika refresh token gagal, logout user
+               localStorage.removeItem('accessToken');
+               window.location.href = '/login';
+               }
+            }
+
+            return Promise.reject(error);
+         }
+         );
+      </script>
+  </body>
+</html>

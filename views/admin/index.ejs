@@ -1,0 +1,227 @@
+<div class="row">
+    <div class="col-lg-4">
+        <div class="card card-transparent card-block card-stretch card-height border-none">
+            <div class="card-body p-0 mt-lg-2 mt-0">
+                <h3 class="mb-3">Hi <%= user.fullname %>, Wellcome</h3>
+                <p class="mb-0 mr-4">Your dashboard gives you views of key performance or business process.</p>
+            </div>
+        </div>
+    </div>
+    <div class="col-lg-8">
+        <div class="row">
+            <div class="col-lg-6 col-md-6">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                            <div class="icon iq-icon-box-2 bg-info-light">
+                                <img src="<%= baseUrl %>/assets_admin/images/product/1.png" class="img-fluid" alt="image">
+                            </div>
+                            <div>
+                                <p class="mb-2">Total Order</p>
+                                <h4><%= salesSummary.totalSales %></h4>
+                            </div>
+                        </div>                                
+                        <div class="iq-progress-bar mt-2">
+                            <span class="bg-info iq-progress progress-1" data-percent="85">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+           
+            <div class="col-lg-6 col-md-6">
+                <div class="card card-block card-stretch card-height">
+                    <div class="card-body">
+                        <div class="d-flex align-items-center mb-4 card-total-sale">
+                            <div class="icon iq-icon-box-2 bg-success-light">
+                                <img src="<%= baseUrl %>/assets_admin/images/product/3.png" class="img-fluid" alt="image">
+                            </div>
+                            <div>
+                                <p class="mb-2">Product Sold</p>
+                                <h4><%= formatCurrency(salesSummary.alltotalRevenue) %></h4>
+                            </div>
+                        </div>
+                        <div class="iq-progress-bar mt-2">
+                            <span class="bg-success iq-progress progress-1" data-percent="75">
+                            </span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+    
+               
+    
+    <div class="col-lg-12">  
+        <div class="card card-block card-stretch card-height">
+            <div class="card-header d-flex justify-content-between">
+                <div class="header-title">
+                    <h4 class="card-title">Order Summary</h4>
+                </div>                        
+                <div class="card-header-toolbar d-flex align-items-center">
+                    <div class="dropdown">
+                        <span class="dropdown-toggle dropdown-bg btn" id="dropdownMenuButton005"
+                            data-toggle="dropdown">
+                            This Month<i class="ri-arrow-down-s-line ml-1"></i>
+                        </span>
+                        <div class="dropdown-menu dropdown-menu-right shadow-none"
+                            aria-labelledby="dropdownMenuButton005">
+                            <a class="dropdown-item" href="#" data-period="year">Year</a>
+                            <a class="dropdown-item" href="#" data-period="month">Month</a>
+                            <a class="dropdown-item" href="#" data-period="week">Week</a>
+                        </div>
+                    </div>
+                </div>
+            </div> 
+            <div class="card-body">
+                <div class="d-flex flex-wrap align-items-center mt-2">
+                    <div class="d-flex align-items-center progress-order-left">
+                        <div class="progress progress-round m-0 orange conversation-bar" data-percent="46">
+                            <span class="progress-left">
+                                <span class="progress-bar"></span>
+                            </span>
+                            <span class="progress-right">
+                                <span class="progress-bar"></span>
+                            </span>
+                            <div class="progress-value text-secondary">100%</div>
+                        </div>
+                        <div class="progress-value ml-3 pr-5 border-right">
+                            <h5><%= formatCurrency(salesSummary.averageOrderValue) %></h5>
+                            <p class="mb-0">Average Orders</p>
+                        </div>
+                    </div>
+                    <div class="d-flex align-items-center ml-5 progress-order-right">
+                        <div class="progress progress-round m-0 primary conversation-bar" data-percent="46">
+                            <span class="progress-left">
+                                <span class="progress-bar"></span>
+                            </span>
+                            <span class="progress-right">
+                                <span class="progress-bar"></span>
+                            </span>
+                            <div class="progress-value text-primary">100%</div>
+                        </div>
+                        <div class="progress-value ml-3">
+                            <h5><%= formatCurrency(salesSummary.totalRevenue) %></h5>
+                            <p class="mb-0">Total Revenue</p>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="card-body pt-0">
+                <canvas id="monthlySalesChart"></canvas>
+            </div>
+        </div>
+    </div>
+</div>
+<script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+<script>
+  
+  document.addEventListener('DOMContentLoaded', function() {
+  const ctx = document.getElementById('monthlySalesChart').getContext('2d');
+  let monthlySalesChart;
+
+  // Fetch data from REST API
+  fetch('/api/sales-trend')
+    .then(response => response.json())
+    .then(data => {
+      // Prepare data for the chart
+      const labels = data.map(item => `${item.year}-${item.month}`);
+      const totalItemsData = data.map(item => item.total_sales);
+      const totalSalesData = data.map(item => item.total_revenue);
+
+      // Create the chart
+      monthlySalesChart = new Chart(ctx, {
+        type: 'line',
+        data: {
+          labels: labels,
+          datasets: [
+            {
+              label: 'Total Items',
+              data: totalItemsData,
+              borderColor: '#4BC0C0',
+              backgroundColor: '#4BC0C0',
+              tension: 0.4
+            },
+            {
+              label: 'Total Sales',
+              data: totalSalesData,
+              borderColor: '#FF6384',
+              backgroundColor: '#FF6384',
+              tension: 0.4
+            }
+          ]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            title: {
+              display: true,
+              text: 'Monthly Sales Trend'
+            }
+          },
+          scales: {
+            y: {
+              beginAtZero: true
+            }
+          }
+        }
+      });
+    })
+    .catch(error => {
+      console.error('Error fetching sales trend data:', error);
+    });
+});
+</script>
+<script>
+    document.addEventListener('DOMContentLoaded', function() {
+        // Dropdown event listener
+        const periodDropdown = document.querySelectorAll('[data-period]');
+        periodDropdown.forEach(item => {
+            item.addEventListener('click', function() {
+                const period = this.getAttribute('data-period');
+                fetchSalesSummary(period);
+            });
+        });
+    
+        function fetchSalesSummary(period) {
+            axios.get(`/api/sales-summary?period=${period}`)
+                .then(function(response) {
+                    const salesSummary = response.data;
+                    
+                    // Update average order value
+                    document.querySelector('.progress-order-left h5').textContent = 
+                        formatCurrency(salesSummary.averageOrderValue);
+                    
+                    // Update total revenue
+                    document.querySelector('.progress-order-right h5').textContent = 
+                        formatCurrency(salesSummary.totalRevenue);
+    
+            
+                })
+                .catch(function(error) {
+                    Swal.fire({
+                        icon: 'error',
+                        title: 'Error',
+                        text: 'Failed to fetch sales summary'
+                    });
+                });
+        }
+    
+      
+    });
+    function formatCurrency(amount) {
+    // Handle potential null or undefined values
+    if (amount == null) return 'Rp 0';
+
+    // Ensure amount is a number
+    const numAmount = Number(amount);
+
+    return new Intl.NumberFormat('id-ID', {
+        style: 'currency',
+        currency: 'IDR',
+        minimumFractionDigits: 2,
+        maximumFractionDigits: 2
+    }).format(numAmount);
+}
+    </script>
